@@ -1,0 +1,1803 @@
+<template>
+  <div
+    class="modal fade show d-block"
+    tabindex="-1"
+    style="background-color: rgba(0, 0, 0, 0.5)"
+  >
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">
+            <i class="bi bi-diagram-3 me-2"></i>
+            Workflow Details - {{ alert.alertName }}
+          </h5>
+          <button
+            type="button"
+            class="btn-close btn-close-white"
+            @click="$emit('close')"
+          ></button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Alert Overview -->
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                Alert Overview
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <label class="small text-muted">Alert ID</label>
+                  <div class="fw-semibold">{{ alert.id }}</div>
+                </div>
+                <div class="col-md-3">
+                  <label class="small text-muted">Ticket ID</label>
+                  <div class="fw-semibold">{{ alert.ticketId }}</div>
+                </div>
+                <div class="col-md-3">
+                  <label class="small text-muted">Status</label>
+                  <div>
+                    <span
+                      :class="getStatusBadgeClass(alert.status)"
+                      class="badge"
+                    >
+                      {{ formatStatus(alert.status) }}
+                    </span>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <label class="small text-muted">Severity</label>
+                  <div>
+                    <span
+                      :class="getSeverityBadgeClass(alert.severity)"
+                      class="badge"
+                    >
+                      {{ alert.severity.toUpperCase() }}
+                    </span>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <label class="small text-muted">Target Agent</label>
+                  <div class="fw-semibold">
+                    <i class="bi bi-robot me-1"></i>
+                    {{ alert.agentName }}
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <label class="small text-muted">Start Time</label>
+                  <div class="fw-semibold">
+                    {{ formatDateTime(alert.insertedAt) }}
+                  </div>
+                  <!-- <div class="col-md-4">
+                  <label class="small text-muted">Execution Time</label>
+                  <div class="fw-semibold">
+                    <i class="bi bi-clock me-1"></i>
+                    {{ alert.executionTime }}
+                  </div>
+                </div> -->
+                </div>
+                <div class="col-12">
+                  <label class="small text-muted">Description</label>
+                  <div class="fw-semibold">{{ alert.ticket }}</div>
+                </div>
+                <!-- <div class="col-12">
+                  <label class="small text-muted">Progress</label>
+                  <div class="progress" style="height: 25px;">
+                    <div
+                      class="progress-bar"
+                      :class="getProgressBarClass(alert.status)"
+                      :style="{ width: alert.progress + '%' }"
+                      role="progressbar"
+                    >
+                      {{ alert.progress }}%
+                    </div>
+                  </div>
+                </div> -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Classification Reasoning -->
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="bi bi-lightbulb me-2"></i>
+                Classification Reasoning
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                {{ alert.reasoning }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Supervisor Agent Progress -->
+          <!-- <div class="card border-0 shadow-sm mb-4"> -->
+          <!-- <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="bi bi-person-badge me-2"></i>
+                Supervisor Agent Progress
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="timeline">
+                <div
+                  v-for="(step, index) in alert.supervisorProgress"
+                  :key="index"
+                  class="timeline-item"
+                  :class="getStepClass(step.status)"
+                >
+                  <div class="timeline-marker">
+                    <i :class="getStepIcon(step.status)"></i>
+                  </div>
+                  <div class="timeline-content">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <h6 class="mb-1">{{ step.step }}</h6>
+                        <small class="text-muted">
+                          {{ step.timestamp ? formatDateTime(step.timestamp) : 'Pending' }}
+                        </small>
+                      </div>
+                      <span :class="getStatusBadgeClass(step.status)" class="badge">
+                        {{ formatStatus(step.status) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div> -->
+          <!-- </div> -->
+
+          <!-- Application Agent Progress -->
+          <!-- <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="bi bi-cpu me-2"></i>
+                Application Agent Progress
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="accordion" id="applicationProgressAccordion">
+                <div
+                  v-for="(step, index) in alert.applicationProgress"
+                  :key="index"
+                  class="accordion-item"
+                >
+                  <h2 class="accordion-header">
+                    <button
+                      class="accordion-button"
+                      :class="{ collapsed: index !== 0 }"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      :data-bs-target="`#collapse${index}`"
+                    >
+                      <i :class="getStepIcon(step.status)" class="me-2"></i>
+                      <span class="me-2">{{ step.step }}</span>
+                      <span :class="getStatusBadgeClass(step.status)" class="badge ms-auto me-2">
+                        {{ formatStatus(step.status) }}
+                      </span>
+                    </button>
+                  </h2>
+                  <div
+                    :id="`collapse${index}`"
+                    class="accordion-collapse collapse"
+                    :class="{ show: index === 0 }"
+                    data-bs-parent="#applicationProgressAccordion"
+                  >
+                    <div class="accordion-body">
+                      <div class="row g-3">
+                        <div class="col-md-6">
+                          <label class="small text-muted">Timestamp</label>
+                          <div class="fw-semibold">
+                            {{ step.timestamp ? formatDateTime(step.timestamp) : 'Not started' }}
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="small text-muted">Status</label>
+                          <div>
+                            <span :class="getStatusBadgeClass(step.status)" class="badge">
+                              {{ formatStatus(step.status) }}
+                            </span>
+                          </div>
+                        </div>
+                        <div class="col-12" v-if="step.details">
+                          <label class="small text-muted">Details</label>
+                          <div class="alert alert-secondary mb-0">
+                            <code>{{ step.details }}</code>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div> -->
+
+          <!-- Tool Execution Approval -->
+          <div
+            v-if="alert.status === 'PENDING_APPROVAL'"
+            class="card border-0 shadow-sm border-warning"
+          >
+            <!-- <div class="card-header bg-warning bg-opacity-10">
+              <h6 class="mb-0 text-warning">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                Tool Execution Approval Required
+              </h6>
+            </div> -->
+            <div class="card-body">
+              <!-- <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                  <label class="small text-muted">Tool Name</label>
+                  <div class="fw-semibold">{{ alert.toolExecution.toolName }}</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="small text-muted">Risk Level</label>
+                  <div>
+                    <span :class="getRiskBadgeClass(alert.toolExecution.riskLevel)" class="badge">
+                      {{ alert.toolExecution.riskLevel.toUpperCase() }}
+                    </span>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <label class="small text-muted">Description</label>
+                  <div class="alert alert-info mb-0">
+                    {{ alert.toolExecution.description }}
+                  </div>
+                </div>
+                <div class="col-12">
+                  <label class="small text-muted">Command to Execute</label>
+                  <div class="alert alert-dark mb-0">
+                    <code class="text-white">{{ alert.toolExecution.command }}</code>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="small text-muted">Estimated Downtime</label>
+                  <div class="fw-semibold">
+                    <i class="bi bi-clock me-1"></i>
+                    {{ alert.toolExecution.estimatedDowntime }}
+                  </div>
+                </div>
+              </div> -->
+
+              <div class="d-flex gap-2 justify-content-end">
+                <button class="btn btn-danger" @click="showRejectModal = true">
+                  <i class="bi bi-x-circle me-2"></i>
+                  Reject Tool Execution
+                </button>
+                <button class="btn btn-success" @click="handleApprove">
+                  <i class="bi bi-check-circle me-2"></i>
+                  Approve Tool Execution
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Task Agent Progress -->
+          <div class="card border-0 shadow-sm mb-4">
+            <div
+              class="card-header bg-light d-flex justify-content-between align-items-center"
+            >
+              <h6 class="mb-0">
+                <i class="bi bi-robot me-2"></i>
+                Task Agent Progress
+              </h6>
+              <button
+                v-if="taskAgentData"
+                class="btn btn-sm btn-outline-primary"
+                @click="fetchTaskAgentProgress"
+                :disabled="taskAgentLoading"
+              >
+                <i class="bi bi-arrow-clockwise me-1"></i>
+                Refresh
+              </button>
+            </div>
+            <div class="card-body">
+              <!-- Loading State -->
+              <div v-if="taskAgentLoading" class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Fetching task agent progress...</p>
+              </div>
+
+              <!-- Error State -->
+              <!-- <div v-else-if="taskAgentError" class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                {{ taskAgentError }}
+                <button class="btn btn-sm btn-outline-primary ms-2" @click="fetchTaskAgentProgress">
+                  Retry
+                </button>
+              </div> -->
+
+              <!-- Success State with Data -->
+              <div v-else-if="taskAgentData">
+                <!-- Execution Summary -->
+                <div class="row g-3 mb-4">
+                  <div class="col-md-3">
+                    <label class="small text-muted">Workflow Status</label>
+                    <div>
+                      <span
+                        :class="
+                          getStatusBadgeClass(
+                            taskAgentData.taskAgentSummary?.workflowStatus,
+                          )
+                        "
+                        class="badge"
+                      >
+                        {{
+                          formatStatus(
+                            taskAgentData.taskAgentSummary?.workflowStatus,
+                          )
+                        }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="small text-muted">Total Steps</label>
+                    <div class="fw-semibold">
+                      {{ taskAgentData.taskAgentSummary?.completedSteps || 0 }}
+                      / {{ taskAgentData.taskAgentSummary?.totalSteps || 0 }}
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="small text-muted">Execution Time</label>
+                    <div class="fw-semibold">
+                      <i class="bi bi-clock me-1"></i>
+                      {{
+                        calculateExecutionTime(
+                          taskAgentData.taskAgentSummary.startTime,
+                          taskAgentData.taskAgentSummary.endTime,
+                        )
+                      }}
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="small text-muted">Workflow Type</label>
+                    <div class="fw-semibold text-capitalize">
+                      {{
+                        taskAgentData.taskAgentSummary?.workflowType || "N/A"
+                      }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="mb-4">
+                  <label class="small text-muted">Progress</label>
+                  <div class="progress" style="height: 20px">
+                    <div
+                      class="progress-bar"
+                      :class="
+                        getProgressBarClass(
+                          taskAgentData.taskAgentSummary?.workflowStatus,
+                        )
+                      "
+                      :style="{ width: getProgressPercentage() + '%' }"
+                      role="progressbar"
+                    >
+                      {{ getProgressPercentage() }}%
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Confidence Score -->
+                <div
+                  v-if="
+                    taskAgentData.confidenceScore !== undefined &&
+                    taskAgentData.confidenceScore !== null
+                  "
+                  class="mb-4"
+                >
+                  <div class="card border-0 shadow-sm">
+                    <div class="card-body py-2">
+                      <div
+                        class="d-flex align-items-center justify-content-between"
+                      >
+                        <div class="d-flex align-items-center">
+                          <i
+                            class="bi bi-speedometer2 text-primary me-2 fs-5"
+                          ></i>
+                          <span class="fw-bold text-dark fs-6"
+                            >Confidence Score:</span
+                          >
+                          <span class="ms-2 fs-5 fw-bold text-primary">
+                            {{ taskAgentData.confidenceScore }}%
+                          </span>
+                        </div>
+                        <button
+                          class="btn btn-sm btn-outline-danger"
+                          @click="toggleEdit"
+                          type="button"
+                        >
+                          <i class="bi bi-pencil-square me-1"></i> Edit
+                        </button>
+                      </div>
+                      <!-- Edit Section -->
+                      <div
+                        v-if="showConfidenceEdit"
+                        class="mt-3 pt-3 border-top"
+                      >
+                        <div class="d-flex flex-column align-items-center">
+                          <!-- Score Editor -->
+                          <div class="d-flex align-items-center mb-3">
+                            <button
+                              class="btn btn-outline-secondary"
+                              @click="decrementScore"
+                              :disabled="editedConfidenceScore <= 15"
+                              style="width: 36px; height: 36px; padding: 0"
+                            >
+                              <i class="bi bi-dash-lg fw-bold"></i>
+                            </button>
+                            <span class="mx-4 fs-2 fw-bold text-primary">
+                              {{ editedConfidenceScore }}%
+                            </span>
+                            <button
+                              class="btn btn-outline-secondary"
+                              @click="incrementScore"
+                              :disabled="editedConfidenceScore >= 100"
+                              style="width: 36px; height: 36px; padding: 0"
+                            >
+                              <i class="bi bi-plus-lg fw-bold"></i>
+                            </button>
+                          </div>
+                          <!-- Action Buttons -->
+                          <div>
+                            <button
+                              class="btn btn-secondary me-2"
+                              @click="cancelEdit"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              class="btn btn-success"
+                              @click="saveConfidenceScore"
+                            >
+                              Save
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Execution Nodes Accordion -->
+                <div class="accordion" id="taskAgentAccordion">
+                  <div
+                    v-for="(node, index) in taskAgentData.executionNodes"
+                    :key="index"
+                    class="accordion-item"
+                  >
+                    <h2 class="accordion-header">
+                      <button
+                        class="accordion-button"
+                        :class="{ collapsed: index !== 0 }"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        :data-bs-target="`#taskNode${index}`"
+                      >
+                        <i
+                          :class="getStepIcon(node.status)"
+                          class="me-2"
+                          style="width: 4%"
+                        ></i>
+                        <span class="me-2" style="width: 40%">{{
+                          formatNodeName(node.nodeName)
+                        }}</span>
+                        <span
+                          :class="getStatusBadgeClass(node.status)"
+                          class="badge ms-auto me-2"
+                          style="width: 40"
+                        >
+                          {{ formatStatus(node.status) }}
+                        </span>
+                      </button>
+                    </h2>
+                    <div
+                      :id="`taskNode${index}`"
+                      class="accordion-collapse collapse"
+                      :class="{ show: index === 0 }"
+                      data-bs-parent="#taskAgentAccordion"
+                    >
+                      <div class="accordion-body">
+                        <div class="row g-3">
+                          <div class="col-md-6">
+                            <label class="small text-muted">Node Name</label>
+                            <div class="fw-semibold">{{ node.nodeName }}</div>
+                          </div>
+                          <div class="col-md-6">
+                            <label class="small text-muted"
+                              >Execution Order</label
+                            >
+                            <div class="fw-semibold">
+                              {{ node.executionOrder }}
+                            </div>
+                          </div>
+                          <div class="col-12">
+                            <label class="small text-muted"
+                              >Result Summary</label
+                            >
+                            <div class="alert alert-info mb-0">
+                              <i class="bi bi-info-circle me-2"></i>
+                              {{ node.resultSummary }}
+                            </div>
+                          </div>
+                          <div
+                            class="col-12"
+                            v-if="
+                              node.fullResult &&
+                              node.nodeName !== 'fetch_resolution' &&
+                              node.nodeName !== 'generate_resolution'
+                            "
+                          >
+                            <label class="small text-muted">Full Result</label>
+                            <div class="alert alert-secondary mb-0">
+                              <code>{{ node.fullResult }}</code>
+                            </div>
+                          </div>
+
+                          <!-- Fetch/Generate Resolution Data -->
+                          <template
+                            v-if="
+                              (node.nodeName === 'fetch_resolution' ||
+                                node.nodeName === 'generate_resolution') &&
+                              parseFetchResolutionData(node)
+                            "
+                          >
+                            <div
+                              class="col-12"
+                              v-if="
+                                parseFetchResolutionData(node).summary.length >
+                                0
+                              "
+                            >
+                              <label class="small text-muted"
+                                >Full Summary</label
+                              >
+                              <div class="alert alert-info mb-0">
+                                <ul class="mb-0" style="padding-left: 1.2rem">
+                                  <li
+                                    v-for="(
+                                      line, idx
+                                    ) in parseFetchResolutionData(node).summary"
+                                    :key="idx"
+                                  >
+                                    {{ line }}
+                                  </li>
+                                </ul>
+                              </div>
+                            </div>
+
+                            <div
+                              class="col-12"
+                              v-if="
+                                parseFetchResolutionData(node) &&
+                                parseFetchResolutionData(node).showSteps
+                              "
+                            >
+                              <div
+                                class="accordion"
+                                :id="'resolutionStepsAccordion' + index"
+                              >
+                                <div class="accordion-item">
+                                  <h2 class="accordion-header">
+                                    <button
+                                      class="accordion-button"
+                                      type="button"
+                                      data-bs-toggle="collapse"
+                                      :data-bs-target="
+                                        '#resolutionSteps' + index
+                                      "
+                                    >
+                                      <!-- <i class="bi bi-list-ol me-2"></i> -->
+                                      Resolution Flow
+                                    </button>
+                                  </h2>
+                                  <div
+                                    :id="'resolutionSteps' + index"
+                                    class="accordion-collapse collapse show"
+                                    :data-bs-parent="
+                                      '#resolutionStepsAccordion' + index
+                                    "
+                                  >
+                                    <div class="accordion-body">
+                                      <div class="d-flex flex-column gap-2">
+                                        <!-- SPLUNK Tickets: Read-only with sub-step formatting -->
+                                        <template v-if="isReadOnlyResolution">
+                                          <div
+                                            v-for="(
+                                              stepGroup, groupIdx
+                                            ) in parsedStepsWithSubSteps"
+                                            :key="'splunk-step-' + groupIdx"
+                                            class="card border"
+                                          >
+                                            <div class="card-body p-3">
+                                              <!-- Main Step -->
+                                              <p class="mb-0 fw-semibold">
+                                                {{ stepGroup.mainStep }}
+                                              </p>
+                                              <!-- Sub-steps (indented) -->
+                                              <div
+                                                v-if="
+                                                  stepGroup.subSteps.length > 0
+                                                "
+                                                class="ms-4 mt-2"
+                                              >
+                                                <p
+                                                  v-for="(
+                                                    subStep, subIdx
+                                                  ) in stepGroup.subSteps"
+                                                  :key="
+                                                    'sub-' +
+                                                    groupIdx +
+                                                    '-' +
+                                                    subIdx
+                                                  "
+                                                  class="mb-1 text-secondary"
+                                                  style="font-size: 0.95rem"
+                                                >
+                                                  {{ subStep }}
+                                                </p>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </template>
+
+                                        <!-- Non-SPLUNK Tickets: Editable flat list -->
+                                        <template v-else>
+                                          <!-- Existing Steps -->
+                                          <div
+                                            v-for="(
+                                              step, stepIdx
+                                            ) in localSteps"
+                                            :key="'existing-' + stepIdx"
+                                            class="card border"
+                                          >
+                                            <div class="card-body p-3">
+                                              <div
+                                                class="d-flex justify-content-between align-items-start"
+                                              >
+                                                <div class="flex-grow-1 me-3">
+                                                  <!-- Editable Text Area -->
+                                                  <textarea
+                                                    v-if="
+                                                      editingStepIndex ===
+                                                      stepIdx
+                                                    "
+                                                    v-model="editedStepText"
+                                                    class="form-control"
+                                                    rows="2"
+                                                    @keydown.esc="
+                                                      cancelEditStep
+                                                    "
+                                                  ></textarea>
+                                                  <!-- Display Text -->
+                                                  <p v-else class="mb-0">
+                                                    {{ step }}
+                                                  </p>
+                                                </div>
+                                                <!-- Action buttons -->
+                                                <div class="d-flex gap-2">
+                                                  <!-- Save/Cancel buttons when editing -->
+                                                  <template
+                                                    v-if="
+                                                      editingStepIndex ===
+                                                      stepIdx
+                                                    "
+                                                  >
+                                                    <button
+                                                      class="btn btn-sm btn-success"
+                                                      type="button"
+                                                      title="Save Step"
+                                                      @click="
+                                                        saveEditStep(
+                                                          node,
+                                                          stepIdx,
+                                                        )
+                                                      "
+                                                    >
+                                                      <i
+                                                        class="bi bi-check-lg"
+                                                      ></i>
+                                                    </button>
+                                                    <button
+                                                      class="btn btn-sm btn-secondary"
+                                                      type="button"
+                                                      title="Cancel"
+                                                      @click="cancelEditStep"
+                                                    >
+                                                      <i class="bi bi-x-lg"></i>
+                                                    </button>
+                                                  </template>
+                                                  <!-- Edit/Delete buttons when not editing -->
+                                                  <template v-else>
+                                                    <button
+                                                      class="btn btn-sm btn-outline-primary"
+                                                      type="button"
+                                                      title="Edit Step"
+                                                      @click="
+                                                        startEditStep(
+                                                          stepIdx,
+                                                          step,
+                                                        )
+                                                      "
+                                                    >
+                                                      <i
+                                                        class="bi bi-pencil"
+                                                      ></i>
+                                                    </button>
+                                                    <button
+                                                      class="btn btn-sm btn-outline-danger"
+                                                      type="button"
+                                                      title="Delete Step"
+                                                      @click="
+                                                        deleteStep(
+                                                          node,
+                                                          stepIdx,
+                                                        )
+                                                      "
+                                                    >
+                                                      <i
+                                                        class="bi bi-trash"
+                                                      ></i>
+                                                    </button>
+                                                  </template>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+
+                                          <!-- New Steps -->
+                                          <div
+                                            v-for="(
+                                              newStep, newStepIdx
+                                            ) in newSteps"
+                                            :key="'new-' + newStepIdx"
+                                            class="card border border-success"
+                                          >
+                                            <div class="card-body p-3">
+                                              <div
+                                                class="d-flex justify-content-between align-items-start"
+                                              >
+                                                <div class="flex-grow-1 me-3">
+                                                  <textarea
+                                                    v-model="
+                                                      newSteps[newStepIdx]
+                                                    "
+                                                    class="form-control"
+                                                    rows="2"
+                                                    placeholder="Enter step description..."
+                                                  ></textarea>
+                                                </div>
+                                                <div class="d-flex gap-2">
+                                                  <button
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    type="button"
+                                                    title="Remove Step"
+                                                    @click="
+                                                      removeNewStep(newStepIdx)
+                                                    "
+                                                  >
+                                                    <i class="bi bi-trash"></i>
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+
+                                          <!-- Add Step / Save Buttons -->
+                                          <div
+                                            class="d-flex justify-content-between mt-2"
+                                          >
+                                            <button
+                                              class="btn btn-sm btn-success"
+                                              type="button"
+                                              @click="addNewStepField"
+                                            >
+                                              <i
+                                                class="bi bi-plus-circle me-1"
+                                              ></i>
+                                              Add Step
+                                            </button>
+                                            <button
+                                              v-if="
+                                                hasStepChanges ||
+                                                newSteps.length > 0
+                                              "
+                                              class="btn btn-sm btn-success"
+                                              type="button"
+                                              @click="saveAllNewSteps(node)"
+                                            >
+                                              <i class="bi bi-save me-1"></i>
+                                              Save All Changes
+                                            </button>
+                                          </div>
+                                        </template>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </template>
+
+                          <div class="col-12" v-if="node.rootCause">
+                            <label class="small text-muted">Root Cause</label>
+                            <div class="alert alert-secondary mb-0">
+                              <code>{{ node.rootCause }}</code>
+                            </div>
+                          </div>
+                          <div class="col-12" v-if="node.rootCause">
+                            <label class="small text-muted"
+                              >Resolution Performed</label
+                            >
+                            <div class="alert alert-secondary mb-0">
+                              <code
+                                >Sent an email with Team to fix this
+                                issue.</code
+                              >
+                            </div>
+                          </div>
+                          <div class="col-12" v-if="node.errorMessage">
+                            <label class="small text-muted"
+                              >Error Message</label
+                            >
+                            <div class="alert alert-danger mb-0">
+                              <i class="bi bi-exclamation-triangle me-2"></i>
+                              {{ node.errorMessage }}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Verification Details -->
+                <!-- <div v-if="taskAgentData.executionDetails?.verificationMessage" class="mt-4">
+                  <div class="card border-warning">
+                    <div class="card-header bg-warning bg-opacity-10">
+                      <h6 class="mb-0 text-warning">
+                        <i class="bi bi-shield-exclamation me-2"></i>
+                        Verification Details
+                      </h6>
+                    </div>
+                    <div class="card-body">
+                      <div class="row g-3">
+                        <div class="col-md-6">
+                          <label class="small text-muted">Verification Status</label>
+                          <div>
+                            <span :class="getStatusBadgeClass(taskAgentData.executionDetails.verificationStatus)" class="badge">
+                              {{ formatStatus(taskAgentData.executionDetails.verificationStatus) }}
+                            </span>
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="small text-muted">Resolutions Executed</label>
+                          <div class="fw-semibold">{{ taskAgentData.executionDetails.resolutionsExecuted }}</div>
+                        </div>
+                        <div class="col-12">
+                          <label class="small text-muted">Verification Message</label>
+                          <div class="alert alert-warning mb-0">
+                            {{ taskAgentData.executionDetails.verificationMessage }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div> -->
+              </div>
+
+              <!-- No Data State -->
+              <div v-else class="text-center py-4 text-muted">
+                <i class="bi bi-info-circle fs-1"></i>
+                <p class="mt-2">No task agent data available for this alert</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="modal-footer d-flex justify-content-between align-items-center"
+        >
+          <!-- New Button: Visible only if status is not 'RESOLVED' (case-insensitive) -->
+          <div>
+            <button
+              v-if="!alert.agentName || !alert.reasoning"
+              type="button"
+              class="btn btn-info me-2"
+              @click="handleSuperAgent"
+              :disabled="isSuperAgentProcessing"
+            >
+              <span v-if="isSuperAgentProcessing">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Invoking...
+              </span>
+              <span v-else> Super Agent </span>
+            </button>
+
+            <button
+              v-if="
+                alert.status &&
+                alert.status.toUpperCase() !== 'RESOLVED' &&
+                alert.reasoning
+              "
+              type="button"
+              class="btn btn-primary me-2"
+              @click="fetchRemediations"
+              :disabled="isTaskAgentProcessing"
+            >
+              <span v-if="isTaskAgentProcessing">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Invoking...
+              </span>
+              <span v-else> Task Agent </span>
+            </button>
+          </div>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            @click="$emit('close')"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reject Reason Modal -->
+    <div
+      v-if="showRejectModal"
+      class="modal fade show d-block"
+      tabindex="-1"
+      style="background-color: rgba(0, 0, 0, 0.5); z-index: 1060"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Reject Tool Execution</h5>
+            <button
+              type="button"
+              class="btn-close"
+              @click="showRejectModal = false"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <label class="form-label">Reason for Rejection</label>
+            <textarea
+              v-model="rejectReason"
+              class="form-control"
+              rows="4"
+              placeholder="Please provide a reason for rejecting this tool execution..."
+            ></textarea>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              @click="showRejectModal = false"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn btn-danger"
+              @click="handleReject"
+              :disabled="!rejectReason.trim()"
+            >
+              Confirm Rejection
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from "vue"; // Added onMounted for API calls
+import { getTaskAgentProgress, BASE_API_URL } from "@/utils/api"; // Import API function and base URL
+
+const props = defineProps({
+  alert: {
+    type: Object,
+    required: true,
+  },
+});
+
+const emit = defineEmits(["close", "approve", "reject"]);
+
+const showRejectModal = ref(false);
+const rejectReason = ref("");
+
+// Task Agent Progress state
+const taskAgentData = ref(null);
+const taskAgentLoading = ref(false);
+const taskAgentError = ref(null);
+
+// Confidence Score Edit state
+const showConfidenceEdit = ref(false);
+const editedConfidenceScore = ref(null);
+
+// Resolution Steps Edit state
+const editingStepIndex = ref(null);
+const editedStepText = ref("");
+const newSteps = ref([]);
+const localSteps = ref([]); // Local copy of steps for editing
+const hasStepChanges = ref(false); // Track if any changes were made
+const currentResolutionId = ref(null); // Store resolution ID for API call
+const resolutionData = ref(null); // Store fetched resolution data from API
+
+// Computed property to check if resolution steps should be read-only (SPLUNK tickets)
+const isReadOnlyResolution = computed(() => {
+  const ticketId = props.alert?.ticketId || "";
+  return ticketId.startsWith("SPLUNK");
+});
+
+// Computed property to parse steps into main steps and sub-steps for SPLUNK tickets
+const parsedStepsWithSubSteps = computed(() => {
+  if (!isReadOnlyResolution.value || !localSteps.value.length) {
+    return [];
+  }
+
+  const result = [];
+  let currentMainStep = null;
+
+  localSteps.value.forEach((step) => {
+    const trimmedStep = step.trim();
+
+    // Check if this is a sub-step (starts with -)
+    if (trimmedStep.startsWith("-")) {
+      if (currentMainStep) {
+        // Add to current main step's sub-steps
+        currentMainStep.subSteps.push(trimmedStep);
+      } else {
+        // If no main step yet, treat as standalone
+        result.push({
+          mainStep: trimmedStep,
+          subSteps: [],
+          isSubStepOnly: true,
+        });
+      }
+    } else {
+      // This is a main step
+      currentMainStep = {
+        mainStep: trimmedStep,
+        subSteps: [],
+      };
+      result.push(currentMainStep);
+    }
+  });
+
+  return result;
+});
+
+// Fetch task agent progress when modal opens
+onMounted(async () => {
+  await fetchTaskAgentProgress();
+});
+
+const fetchTaskAgentProgress = async () => {
+  if (!props.alert?.id) return;
+
+  taskAgentLoading.value = true;
+  taskAgentError.value = null;
+
+  try {
+    const response = await getTaskAgentProgress(props.alert.id);
+    taskAgentData.value = response;
+    console.log("Task Agent Data:", response);
+    console.log(
+      "Confidence Score:",
+      response?.taskAgentSummary?.confidenceScore,
+    );
+
+    // Extract and fetch resolution data
+    await fetchResolutionData(response);
+  } catch (error) {
+    taskAgentError.value =
+      error.message || "Failed to fetch task agent progress";
+    console.error("Error fetching task agent progress:", error);
+  } finally {
+    taskAgentLoading.value = false;
+  }
+};
+
+const fetchResolutionData = async (taskAgentResponse) => {
+  try {
+    let resolutionId = null;
+
+    // Strategy 1: Check read_from_db node for existing resolution
+    const readFromDbNode = taskAgentResponse?.executionNodes?.find(
+      (node) => node.nodeName === "read_from_db",
+    );
+
+    if (readFromDbNode?.fullResult) {
+      // Pattern: "Found resolution in DB (ID: 25)"
+      const idMatch = readFromDbNode.fullResult.match(/ID:\s*(\d+)/);
+      if (idMatch && idMatch[1]) {
+        resolutionId = idMatch[1];
+        console.log("Extracted Resolution ID from read_from_db:", resolutionId);
+      }
+    }
+
+    // Strategy 2: Check generate_resolution node for newly generated resolution
+    if (!resolutionId) {
+      const generateResolutionNode = taskAgentResponse?.executionNodes?.find(
+        (node) => node.nodeName === "generate_resolution",
+      );
+
+      if (generateResolutionNode?.fullResult) {
+        // Try parsing as JSON first
+        try {
+          const data = JSON.parse(generateResolutionNode.fullResult);
+          // Pattern: "Generated 1 new resolutions | Resolution ID: 26"
+          const idMatch = data.summary?.match(/Resolution ID:\s*(\d+)/);
+          if (idMatch && idMatch[1]) {
+            resolutionId = idMatch[1];
+            console.log(
+              "Extracted Resolution ID from generate_resolution (JSON):",
+              resolutionId,
+            );
+          }
+        } catch (e) {
+          // If not JSON, treat as plain string
+          // Pattern: "Generated 2 new resolutions, total resolutions available: 2 | Resolution ID: 29"
+          const idMatch = generateResolutionNode.fullResult.match(
+            /Resolution ID:\s*(\d+)/,
+          );
+          if (idMatch && idMatch[1]) {
+            resolutionId = idMatch[1];
+            console.log(
+              "Extracted Resolution ID from generate_resolution (string):",
+              resolutionId,
+            );
+          }
+        }
+      }
+    }
+
+    if (!resolutionId) {
+      console.log("No resolution ID found in any node");
+      return;
+    }
+
+    // Store the resolution ID
+    currentResolutionId.value = resolutionId;
+
+    // Fetch resolution details from API
+    const response = await fetch(`${BASE_API_URL}/resolutions/${resolutionId}`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch resolution: ${response.statusText}`);
+    }
+
+    const resolutionDetails = await response.json();
+    console.log("Fetched Resolution Details:", resolutionDetails);
+
+    // Store resolution data
+    resolutionData.value = resolutionDetails;
+
+    // Initialize local steps from action payload
+    const steps = resolutionDetails?.actionPayload?.steps || [];
+    if (steps.length > 0) {
+      localSteps.value = [...steps];
+      hasStepChanges.value = false;
+    }
+  } catch (error) {
+    console.error("Error fetching resolution data:", error);
+  }
+};
+
+// Helper function to get step icon based on status
+const getStepIcon = (status) => {
+  const icons = {
+    success: "bi-check-circle-fill text-success",
+    completed: "bi-check-circle-fill text-success",
+    in_progress: "bi-arrow-clockwise text-info",
+    pending: "bi-clock text-muted",
+    failed: "bi-x-circle-fill text-danger",
+    error: "bi-x-circle-fill text-danger",
+  };
+  return icons[status.toLowerCase()] || "bi-circle text-muted";
+};
+
+// Helper function to calculate execution time
+const calculateExecutionTime = (startTime, endTime) => {
+  if (!startTime || !endTime) return "N/A";
+
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const diffMs = end - start;
+
+  const minutes = Math.floor(diffMs / 60000);
+  const seconds = Math.floor((diffMs % 60000) / 1000);
+
+  return `${minutes}m ${seconds}s`;
+};
+
+// Helper function to format node names
+const formatNodeName = (nodeName) => {
+  return nodeName
+    ? nodeName
+        .split("_")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ")
+    : "Unknown Node";
+};
+
+// Helper function to parse fetch_resolution or generate_resolution fullResult
+const parseFetchResolutionData = (node) => {
+  if (
+    (node.nodeName !== "fetch_resolution" &&
+      node.nodeName !== "generate_resolution") ||
+    !node.fullResult
+  ) {
+    return null;
+  }
+
+  try {
+    let data = null;
+    let isPlainString = false;
+
+    // Try parsing as JSON first
+    try {
+      data = JSON.parse(node.fullResult);
+    } catch (e) {
+      // If not JSON, treat as plain string (for generate_resolution)
+      if (node.nodeName === "generate_resolution") {
+        isPlainString = true;
+      } else {
+        throw e; // Re-throw for other node types
+      }
+    }
+
+    // Extract summary lines based on node type
+    let summaryLines = [];
+
+    if (node.nodeName === "fetch_resolution") {
+      // For fetch_resolution: parse multiline summary with bullets
+      summaryLines = data.summary
+        ? data.summary
+            .split("\n")
+            .filter(
+              (line) =>
+                line.trim() &&
+                !line.toLowerCase().includes("confidence scores"),
+            )
+            .map((line) => line.replace(/^-\s*/, "").trim())
+        : [];
+    } else if (node.nodeName === "generate_resolution") {
+      if (isPlainString) {
+        // Plain string format: "Generated 2 new resolutions, total resolutions available: 2 | Resolution ID: 29"
+        // Split by both pipe (|) and comma (,)
+        const parts = node.fullResult.split("|").map((line) => line.trim());
+        parts.forEach((part) => {
+          const subParts = part
+            .split(",")
+            .map((line) => line.trim())
+            .filter((line) => line);
+          summaryLines.push(...subParts);
+        });
+        summaryLines = summaryLines.filter((line) => line);
+      } else {
+        // JSON format: split by both pipe and comma
+        if (data.summary) {
+          const parts = data.summary.split("|").map((line) => line.trim());
+          parts.forEach((part) => {
+            const subParts = part
+              .split(",")
+              .map((line) => line.trim())
+              .filter((line) => line);
+            summaryLines.push(...subParts);
+          });
+        }
+        // Add generated_count as separate line
+        if (data.generated_count !== undefined) {
+          summaryLines.push(`generated_count: ${data.generated_count}`);
+        }
+      }
+    }
+
+    // Check if we should show steps based on conditions
+    let showSteps = false;
+    if (node.nodeName === "fetch_resolution") {
+      showSteps =
+        data.resolutions_found > 0 &&
+        resolutionData.value &&
+        localSteps.value.length > 0;
+    } else if (node.nodeName === "generate_resolution") {
+      // For plain string, check if we have resolution data and steps
+      if (isPlainString) {
+        showSteps = resolutionData.value && localSteps.value.length > 0;
+      } else {
+        showSteps =
+          data.generated_count > 0 &&
+          resolutionData.value &&
+          localSteps.value.length > 0;
+      }
+    }
+
+    return {
+      summary: summaryLines,
+      steps: showSteps ? localSteps.value : [],
+      resolutionId: currentResolutionId.value,
+      hasData: summaryLines.length > 0 || localSteps.value.length > 0,
+      showSteps: showSteps,
+    };
+  } catch (error) {
+    console.error("Error parsing fetch_resolution data:", error);
+    return null;
+  }
+};
+
+// Helper function to calculate progress percentage
+const getProgressPercentage = () => {
+  if (!taskAgentData.value?.taskAgentSummary) return 0;
+
+  const { completedSteps, totalSteps } = taskAgentData.value.taskAgentSummary;
+  if (!totalSteps || totalSteps === 0) return 0;
+
+  return Math.round((completedSteps / totalSteps) * 100);
+};
+
+// Helper function to get progress bar class
+const getProgressBarClass = (status) => {
+  const classes = {
+    completed: "bg-success",
+    in_progress: "bg-info",
+    failed: "bg-danger",
+    pending: "bg-warning",
+  };
+  return classes[status] || "bg-primary";
+};
+
+// Helper function to get step class for timeline styling
+const getStepClass = (status) => {
+  const classes = {
+    success: "timeline-completed",
+    completed: "timeline-completed",
+    in_progress: "timeline-in-progress",
+    pending: "timeline-pending",
+    failed: "timeline-failed",
+    error: "timeline-failed",
+  };
+  return classes[status] || "timeline-pending";
+};
+
+const getStatusBadgeClass = (status) => {
+  const classes = {
+    pending_approval: "bg-warning text-dark",
+    pending: "bg-secondary",
+    in_progress: "bg-info text-white",
+    completed: "bg-success",
+    resolved: "bg-success",
+    failed: "bg-danger",
+    success: "bg-success",
+    PENDING_APPROVAL: "bg-warning text-dark",
+    IN_PROGRESS: "bg-info text-white",
+    RESOLVED: "bg-success",
+    FAILED: "bg-danger",
+  };
+  return classes[status.toLowerCase()] || "bg-secondary";
+};
+
+const getSeverityBadgeClass = (severity) => {
+  const classes = {
+    LOW: "bg-info",
+    MEDIUM: "bg-warning text-dark",
+    HIGH: "bg-danger",
+    CRITICAL: "bg-danger",
+  };
+  return classes[severity.toUpperCase()] || "bg-secondary";
+};
+
+const getRiskBadgeClass = (risk) => {
+  const classes = {
+    low: "bg-success",
+    medium: "bg-warning text-dark",
+    high: "bg-danger",
+    unknown: "bg-secondary",
+  };
+  return classes[risk] || "bg-secondary";
+};
+
+const formatStatus = (status) => {
+  return status
+    ? status
+        .split("_")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ")
+    : "Unknown";
+};
+
+const formatDateTime = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const handleApprove = () => {
+  emit("approve", props.alert.id);
+};
+
+const handleReject = () => {
+  if (rejectReason.value.trim()) {
+    emit("reject", props.alert.id, rejectReason.value);
+    showRejectModal.value = false;
+    rejectReason.value = "";
+  }
+};
+
+const isSuperAgentProcessing = ref(false);
+const isTaskAgentProcessing = ref(false);
+
+// Confidence Score Edit handlers
+const saveConfidenceScore = async () => {
+  if (
+    editedConfidenceScore.value !== null &&
+    editedConfidenceScore.value >= 15 &&
+    editedConfidenceScore.value <= 100
+  ) {
+    // Check if score has actually changed
+    if (editedConfidenceScore.value === taskAgentData.value.confidenceScore) {
+      alert(
+        "No changes detected. The confidence score is already set to " +
+          editedConfidenceScore.value +
+          "%",
+      );
+      return;
+    }
+
+    try {
+      // Make API call to update confidence score
+      const url = `${BASE_API_URL}/task-agent/${taskAgentData.value.id}/confidence-score`;
+      console.log("API URL:", url);
+      console.log("Request body:", {
+        confidenceScore: editedConfidenceScore.value,
+      });
+
+      const response = await fetch(url, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          confidenceScore: editedConfidenceScore.value,
+        }),
+      });
+
+      console.log("Response status:", response.status);
+      console.log("Response ok:", response.ok);
+
+      if (response.ok) {
+        // Update local state only after successful API call
+        taskAgentData.value.confidenceScore = editedConfidenceScore.value;
+        showConfidenceEdit.value = false;
+        console.log(
+          "Confidence score updated successfully:",
+          editedConfidenceScore.value,
+        );
+        alert(
+          "Confidence score updated successfully to " +
+            editedConfidenceScore.value +
+            "%",
+        );
+      } else {
+        const errorText = await response.text();
+        console.error(
+          "Failed to update confidence score:",
+          response.status,
+          response.statusText,
+          errorText,
+        );
+        alert("Failed to update confidence score. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error updating confidence score:", error);
+      alert(
+        "An error occurred while updating the confidence score. Please try again.",
+      );
+    }
+  } else {
+    alert("Please enter a valid confidence score between 15 and 100");
+  }
+};
+
+const cancelEdit = () => {
+  showConfidenceEdit.value = false;
+  editedConfidenceScore.value = null;
+};
+
+const incrementScore = () => {
+  if (editedConfidenceScore.value < 100) {
+    editedConfidenceScore.value++;
+  }
+};
+
+const decrementScore = () => {
+  if (editedConfidenceScore.value > 15) {
+    editedConfidenceScore.value--;
+  }
+};
+
+const toggleEdit = () => {
+  showConfidenceEdit.value = !showConfidenceEdit.value;
+  if (showConfidenceEdit.value) {
+    editedConfidenceScore.value = taskAgentData.value.confidenceScore;
+  }
+};
+
+const handleSuperAgent = async () => {
+  isSuperAgentProcessing.value = true;
+  try {
+    const response = await fetch(
+      `${BASE_API_URL}/client/trigger-classification?alertId=${props.alert.id}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        //body: JSON.stringify({ alertId: props.alert.id }),
+      },
+    );
+    if (response.ok) {
+      console.log("Super Agent invoked successfully");
+      window.location.reload();
+    } else {
+      console.error("Failed to invoke Super Agent:", response.statusText);
+    }
+  } catch (error) {
+    console.error("Error invoking Super Agent:", error);
+  } finally {
+    isSuperAgentProcessing.value = false;
+  }
+};
+
+// Updated Method: Handle the POST call with improved error handling
+const fetchRemediations = async () => {
+  isTaskAgentProcessing.value = true;
+  try {
+    const response = await fetch(
+      `${BASE_API_URL}/client/trigger-task-agent?alertId=${props.alert.id}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    if (response.ok) {
+      console.log("Remediations fetched successfully");
+      window.location.reload();
+      // Optionally, handle success (e.g., refresh data)
+    } else {
+      console.error(
+        "Failed to fetch remediations:",
+        response.statusText,
+        "CORS might be blocking; check server logs",
+      );
+    }
+  } catch (error) {
+    console.error("Error making POST request:", error);
+  } finally {
+    isTaskAgentProcessing.value = false;
+  }
+};
+
+// Resolution Steps Edit handlers
+const startEditStep = (stepIdx, stepText) => {
+  editingStepIndex.value = stepIdx;
+  editedStepText.value = stepText;
+};
+
+const cancelEditStep = () => {
+  editingStepIndex.value = null;
+  editedStepText.value = "";
+};
+
+const saveEditStep = (node, stepIdx) => {
+  if (!editedStepText.value.trim()) {
+    alert("Step text cannot be empty");
+    return;
+  }
+
+  // Update the local step
+  localSteps.value[stepIdx] = editedStepText.value;
+  hasStepChanges.value = true;
+
+  console.log("Step edited locally:", {
+    stepIndex: stepIdx,
+    newText: editedStepText.value,
+  });
+
+  cancelEditStep();
+};
+
+const deleteStep = (node, stepIdx) => {
+  if (confirm("Are you sure you want to delete this step?")) {
+    // Remove from local steps array
+    localSteps.value.splice(stepIdx, 1);
+    hasStepChanges.value = true;
+
+    console.log("Step deleted locally at index:", stepIdx);
+  }
+};
+
+const addNewStepField = () => {
+  newSteps.value.push("");
+};
+
+const removeNewStep = (newStepIdx) => {
+  newSteps.value.splice(newStepIdx, 1);
+};
+
+const saveAllNewSteps = async (node) => {
+  // Filter out empty steps from new steps
+  const validNewSteps = newSteps.value.filter((step) => step.trim());
+
+  // Merge new steps with local steps
+  if (validNewSteps.length > 0) {
+    localSteps.value.push(...validNewSteps);
+    hasStepChanges.value = true;
+  }
+
+  // Check if we have any changes to save
+  if (!hasStepChanges.value) {
+    alert("No changes to save");
+    return;
+  }
+
+  // Validate resolution ID exists
+  if (!currentResolutionId.value) {
+    alert("Resolution ID not found. Cannot save steps.");
+    return;
+  }
+
+  try {
+    // Make API call to save all steps
+    const response = await fetch(
+      `${BASE_API_URL}/resolutions/${currentResolutionId.value}/action-steps`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          steps: localSteps.value,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to save steps: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log("Steps saved successfully:", result);
+
+    alert("All changes saved successfully!");
+
+    // Reset state
+    hasStepChanges.value = false;
+    newSteps.value = [];
+  } catch (error) {
+    console.error("Error saving steps:", error);
+    alert(`Failed to save steps: ${error.message}`);
+  }
+};
+</script>
+
+<style scoped>
+.modal {
+  display: block;
+}
+
+.timeline {
+  position: relative;
+  padding-left: 30px;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #dee2e6;
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: 2rem;
+}
+
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -24px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid #dee2e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+}
+
+.timeline-completed .timeline-marker {
+  border-color: #198754;
+  background: #d1e7dd;
+}
+
+.timeline-in-progress .timeline-marker {
+  border-color: #0dcaf0;
+  background: #cff4fc;
+  animation: pulse 2s infinite;
+}
+
+.timeline-pending .timeline-marker {
+  border-color: #6c757d;
+  background: #e9ecef;
+}
+
+.timeline-failed .timeline-marker {
+  border-color: #dc3545;
+  background: #f8d7da;
+}
+
+.timeline-content {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border-left: 3px solid #dee2e6;
+}
+
+.timeline-completed .timeline-content {
+  border-left-color: #198754;
+}
+
+.timeline-in-progress .timeline-content {
+  border-left-color: #0dcaf0;
+}
+
+.timeline-failed .timeline-content {
+  border-left-color: #dc3545;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.accordion-button:not(.collapsed) {
+  background-color: #e7f1ff;
+  color: #0d6efd;
+}
+
+code {
+  font-size: 0.9rem;
+}
+</style>
