@@ -254,15 +254,32 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAlertsStore } from '@/store/alerts'
 import WorkflowDetailsModal from '@/components/WorkflowDetailsModal.vue'
 
 const alertsStore = useAlertsStore()
 
+// Polling interval for auto-refresh
+let pollInterval = null
+
 // Fetch alerts when component mounts
 onMounted(async () => {
   await alertsStore.fetchAlerts()
+  
+  // Start polling every 10 seconds for new alerts
+  pollInterval = setInterval(() => {
+    console.log('🔄 Checking for new alerts...');
+    alertsStore.fetchAlerts();
+  }, 5000); // 5 seconds
+})
+
+// Cleanup polling on unmount
+onUnmounted(() => {
+  if (pollInterval) {
+    clearInterval(pollInterval);
+    console.log('🛑 Alert polling stopped');
+  }
 })
 
 const filters = ref({
@@ -310,6 +327,12 @@ const formatStatus = (status) => {
 
 
 const openWorkflowDetails = (alert) => {
+  if (!alert || !alert.id) {
+    console.error('❌ Invalid alert data');
+    return;
+  }
+  
+  console.log('📂 Opening workflow details for alert:', alert.id);
   selectedAlert.value = alert
   alertsStore.setSelectedAlert(alert)
 }
