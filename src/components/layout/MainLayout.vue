@@ -2,7 +2,9 @@
   <div class="main-layout">
     <Navbar />
     <div class="layout-container">
+      <!-- COMMENTED OUT: Left sidebar - no longer needed
       <Sidebar />
+      -->
       <main class="main-content">
         <router-view />
       </main>
@@ -12,30 +14,35 @@
 
 <script setup>
 import Navbar from './Navbar.vue'
-import Sidebar from './Sidebar.vue'
+// COMMENTED OUT: Sidebar no longer used
+// import Sidebar from './Sidebar.vue'
 </script>
 
 <style scoped>
 .main-layout {
-  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background-color: #f8f9fa;
 }
 
 .layout-container {
+  flex: 1;
   display: flex;
- /* padding-top: 56px;  Height of navbar */
+  overflow: hidden;
 }
 
 .main-content {
   flex: 1;
-  margin-left: 280px; /* Width of sidebar */
-  padding: 2rem;
-  min-height: calc(100vh - 56px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 1rem;
 }
 
 @media (max-width: 992px) {
   .main-content {
-    margin-left: 0;
     padding: 1rem;
   }
 }

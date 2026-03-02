@@ -207,16 +207,32 @@ export const useAlertsStore = defineStore('alerts', () => {
     status: 'all',
     agentName: 'all',
     timeRange: '24h',
-    searchQuery: ''
+    searchQuery: '',
+    selectedStatuses: [],
+    selectedSources: []
   })
 
   // Computed
   const filteredAlerts = computed(() => {
     let filtered = alerts.value
 
-    // Status filter
-    if (filters.value.status !== 'all') {
+    // Multi-select status filter (Advanced Search)
+    if (filters.value.selectedStatuses && filters.value.selectedStatuses.length > 0) {
+      filtered = filtered.filter(alert =>
+        filters.value.selectedStatuses.some(s => s.toUpperCase() === (alert.status || '').toUpperCase())
+      )
+    }
+    // Fallback: legacy single status filter
+    else if (filters.value.status !== 'all') {
       filtered = filtered.filter(alert => alert.status.toUpperCase() === filters.value.status.toUpperCase())
+    }
+
+    // Multi-select source filter (Advanced Search)
+    if (filters.value.selectedSources && filters.value.selectedSources.length > 0) {
+      filtered = filtered.filter(alert => {
+        const src = (alert.source || '').toUpperCase()
+        return filters.value.selectedSources.some(s => src.includes(s.toUpperCase()))
+      })
     }
 
     // Agent filter

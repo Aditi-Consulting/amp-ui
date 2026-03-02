@@ -1,27 +1,38 @@
 <template>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm" style="background-color: #1fb3d9; padding: 10px 30px 10px 30px;">
     <div class="container-fluid">
-      <a class="navbar-brand d-flex align-items-center" href="#">
-        <i class="bi bi-shield-check fs-4 me-2"></i>
-        <span class="fw-bold">Alert Management Platform</span>
-      </a>
-      
-      <button 
-        class="navbar-toggler" 
-        type="button" 
-        data-bs-toggle="collapse" 
+      <router-link to="/" class="navbar-brand d-flex align-items-center text-decoration-none">
+        <span class="fw-bold" style="color: #00213A;">AI OPS</span>
+      </router-link>
+
+      <div class="d-flex align-items-center gap-5">
+        <router-link to="/analytics" class="nav-link text-white d-flex align-items-center nav-text-link" style="font-size: 1.25rem;">
+          <i class="bi bi-bar-chart-line me-1"></i>
+          Analytics
+        </router-link>
+        <router-link to="/resolutions" class="nav-link text-white d-flex align-items-center nav-text-link" style="font-size: 1.25rem;">
+          <i class="bi bi-tools me-1"></i>
+          Resolutions
+        </router-link>
+      </div>
+
+      <!-- COMMENTED OUT: Notification bell and Admin profile dropdowns
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
         data-bs-target="#navbarNav"
       >
         <span class="navbar-toggler-icon"></span>
       </button>
-      
+
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item dropdown">
-            <a 
-              class="nav-link dropdown-toggle d-flex align-items-center" 
-              href="#" 
-              role="button" 
+            <a
+              class="nav-link dropdown-toggle d-flex align-items-center"
+              href="#"
+              role="button"
               data-bs-toggle="dropdown"
             >
               <i class="bi bi-bell-fill me-2"></i>
@@ -52,12 +63,12 @@
               </li>
             </ul>
           </li>
-          
+
           <li class="nav-item dropdown">
-            <a 
-              class="nav-link dropdown-toggle d-flex align-items-center" 
-              href="#" 
-              role="button" 
+            <a
+              class="nav-link dropdown-toggle d-flex align-items-center"
+              href="#"
+              role="button"
               data-bs-toggle="dropdown"
             >
               <i class="bi bi-person-circle fs-5 me-1"></i>
@@ -69,11 +80,6 @@
                   <i class="bi bi-person me-2"></i>Profile
                 </a>
               </li>
-              <!-- <li>
-                <router-link to="/settings" class="dropdown-item">
-                  <i class="bi bi-gear me-2"></i>Settings
-                </router-link>
-              </li> -->
               <li><hr class="dropdown-divider"></li>
               <li>
                 <a class="dropdown-item text-danger" href="#">
@@ -84,11 +90,13 @@
           </li>
         </ul>
       </div>
+      END COMMENTED OUT -->
     </div>
   </nav>
 </template>
 
 <script setup>
+/* COMMENTED OUT: Notification and profile logic - no longer needed
 import { computed } from 'vue'
 import { useAlertsStore } from '@/store/alerts'
 import { useRouter } from 'vue-router'
@@ -97,7 +105,7 @@ const alertsStore = useAlertsStore()
 const router = useRouter()
 
 const alertCount = computed(() => {
-  return alertsStore.alerts.filter(a => 
+  return alertsStore.alerts.filter(a =>
     a.status === 'pending_approval' || a.status === 'in_progress'
   ).length
 })
@@ -119,7 +127,7 @@ const getStatusBadgeClass = (status) => {
 }
 
 const formatStatus = (status) => {
-  return status.split('_').map(word => 
+  return status.split('_').map(word =>
     word.charAt(0).toUpperCase() + word.slice(1)
   ).join(' ')
 }
@@ -128,33 +136,56 @@ const viewAlert = (alert) => {
   alertsStore.setSelectedAlert(alert)
   router.push('/')
 }
+*/
 </script>
 
 <style scoped>
 .navbar {
   z-index: 1030;
+  min-height: 90px;
 }
 
 .navbar-brand {
-  font-size: 1.1rem;
+  font-size: 2rem;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
-.dropdown-menu {
-  min-width: 150px;
-  max-height: 400px;
-  overflow-y: auto;
+.navbar-brand:focus,
+.navbar-brand:active {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
-.dropdown-item {
-  padding: 0.75rem 1rem;
+.resolutions-link {
+  cursor: pointer;
+  text-decoration: none;
+  opacity: 0.85;
+  transition: opacity 0.2s;
 }
 
-.dropdown-item:hover {
-  background-color: #f8f9fa;
+.resolutions-link:hover {
+  opacity: 1;
+  text-decoration: none;
 }
 
-.badge {
-  font-size: 0.7rem;
-  padding: 0.25rem 0.5rem;
+.nav-text-link {
+  cursor: pointer;
+  text-decoration: none !important;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.nav-text-link:hover {
+  opacity: 1;
+  text-decoration: none !important;
+}
+
+.nav-text-link:focus,
+.nav-text-link:active {
+  outline: none !important;
+  box-shadow: none !important;
 }
 </style>

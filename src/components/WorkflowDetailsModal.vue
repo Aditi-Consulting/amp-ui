@@ -88,15 +88,17 @@
             </div>
             <div class="card-body">
               <div class="row g-3">
+                <!-- COMMENTED OUT: Alert ID - not needed in modal
                 <div class="col-md-3">
                   <label class="small text-muted">Alert ID</label>
                   <div class="fw-semibold">{{ alert.id }}</div>
                 </div>
-                <div class="col-md-3">
+                -->
+                <div class="col-md-4">
                   <label class="small text-muted">Ticket ID</label>
                   <div class="fw-semibold">{{ alert.ticketId }}</div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                   <label class="small text-muted">Status</label>
                   <div>
                     <span
@@ -107,7 +109,7 @@
                     </span>
                   </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                   <label class="small text-muted">Severity</label>
                   <div>
                     <span

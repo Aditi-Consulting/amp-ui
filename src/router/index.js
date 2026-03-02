@@ -12,11 +12,19 @@ const routes = [
         component: () => import('@/views/Dashboard.vue'),
         meta: { title: 'Dashboard' }
       },
+      /* COMMENTED OUT: Alert creation route - button removed from Dashboard
       {
         path: '/alerts/create',
         name: 'AlertCreation',
         component: () => import('@/views/AlertCreation.vue'),
         meta: { title: 'Create Alert' }
+      },
+      */
+      {
+        path: '/analytics',
+        name: 'Analytics',
+        component: () => import('@/views/Analytics.vue'),
+        meta: { title: 'Analytics' }
       },
       {
         path: '/resolutions',
