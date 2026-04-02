@@ -378,8 +378,9 @@ const statusOptions = [
 ]
 
 const sourceOptions = [
+  { value: 'Kubernetes', label: 'Kubernetes' },
   { value: 'Splunk', label: 'Splunk' },
-  { value: 'Kubernetes', label: 'Kubernetes' }
+  { value: 'ServiceNow', label: 'ServiceNow' }
 ]
 
 const applyAdvancedFilters = () => {
