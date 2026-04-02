@@ -1,0 +1,161 @@
+/* Host element must participate in parent flex layout */
+app-dashboard {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.dashboard {
+  animation: fadeIn 0.3s ease-in;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* AG Grid Container — flex: 1 lets the grid fill remaining card body space */
+.ag-grid-container {
+  flex: 1;
+  width: 100%;
+}
+
+/* Ensure the card and card-body fill remaining space */
+.dashboard .card.flex-grow-1 {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.dashboard .card-body.flex-grow-1 {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* AG Grid row cursor and hover */
+app-dashboard .ag-row {
+  cursor: pointer;
+}
+
+/* Enable proper text wrapping in cells */
+app-dashboard .ag-cell-wrap-text {
+  word-break: break-word;
+  white-space: normal !important;
+  line-height: 1.5;
+}
+
+/* Ensure auto-height rows align content vertically */
+app-dashboard .ag-row .ag-cell {
+  display: flex;
+  align-items: center;
+}
+
+/* Alert Name column - allow block display for wrapping */
+app-dashboard .ag-row .ag-cell[col-id="ticket"] {
+  display: block !important;
+  align-items: unset;
+}
+
+/* Style badges inside AG Grid cells */
+app-dashboard .ag-cell .badge {
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+  font-size: 0.85em;
+}
+
+/* Ensure horizontal scroll appears when columns overflow the viewport */
+app-dashboard .ag-body-horizontal-scroll {
+  min-height: 10px !important;
+  overflow-x: auto !important;
+}
+
+/* Smoother AG Grid pagination - hidden since we use custom top pagination */
+app-dashboard .ag-paging-panel {
+  display: none !important;
+}
+
+/* Override global transition that can affect AG Grid rendering */
+app-dashboard .ag-root-wrapper * {
+  transition: none !important;
+}
+
+/* Restore transitions only for interactive elements within grid */
+app-dashboard .ag-cell .badge,
+app-dashboard .ag-cell .btn {
+  transition: all 0.15s ease !important;
+}
+
+/* Restore native radio inputs inside AG Grid filter panels (Bootstrap overrides them globally) */
+.ag-filter-condition-operator,
+.ag-filter-body-wrapper {
+  input[type="radio"] {
+    appearance: auto !important;
+    -webkit-appearance: radio !important;
+    width: 14px !important;
+    height: 14px !important;
+    accent-color: #0d6efd;
+    cursor: pointer;
+  }
+}
+
+/* Advanced Search Dropdowns */
+.advanced-filter-dropdown {
+  position: relative;
+  flex: 1;
+}
+
+.advanced-filter-dropdown .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.dropdown-menu-custom {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1050;
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+  padding: 0.5rem 0;
+  margin-top: 4px;
+}
+
+.dropdown-item-custom {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #212529;
+  transition: background-color 0.15s ease;
+  user-select: none;
+}
+
+.dropdown-item-custom:hover {
+  background-color: #f0f4ff;
+}
+
+.dropdown-item-custom .form-check-input {
+  cursor: pointer;
+  width: 1em;
+  height: 1em;
+}
+
+.dropdown-item-custom .form-check-input:checked {
+  background-color: #e20074;
+  border-color: #e20074;
+}

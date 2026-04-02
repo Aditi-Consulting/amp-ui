@@ -1,0 +1,149 @@
+<div class="dashboard">
+  <!-- Stats Cards (reusable component) -->
+  <app-stats-cards></app-stats-cards>
+
+  <!-- Advanced Search -->
+  <div class="mb-3">
+    <div class="d-inline-flex flex-column">
+      <button
+        class="btn btn-outline-secondary d-flex align-items-center gap-2"
+        (click)="toggleAdvancedSearch()"
+      >
+        <i class="bi bi-funnel me-1"></i>
+        Advanced Search
+        <i [ngClass]="showAdvancedSearch ? 'bi bi-chevron-up' : 'bi bi-chevron-down'" style="font-size: 0.8em;"></i>
+      </button>
+
+      <!-- Filter dropdowns -->
+      <div *ngIf="showAdvancedSearch" class="d-flex align-items-start mt-2" style="gap: 0.75rem;">
+
+      <!-- Status multi-select dropdown -->
+      <div class="advanced-filter-dropdown" #statusDropdownRef>
+        <button
+          class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2"
+          (click)="toggleStatusDropdown()"
+        >
+          Status
+          <span *ngIf="selectedStatuses.length" class="badge rounded-pill" style="background-color: #e20074;">{{ selectedStatuses.length }}</span>
+          <i [ngClass]="statusDropdownOpen ? 'bi bi-chevron-up' : 'bi bi-chevron-down'" style="font-size: 0.75em;"></i>
+        </button>
+        <div *ngIf="statusDropdownOpen" class="dropdown-menu-custom show">
+          <label
+            *ngFor="let option of statusOptions"
+            class="dropdown-item-custom d-flex align-items-center gap-2"
+          >
+            <input
+              type="checkbox"
+              class="form-check-input m-0"
+              [checked]="isStatusSelected(option.value)"
+              (change)="onStatusChange(option.value)"
+            />
+            <span>{{ option.label }}</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Agents multi-select dropdown -->
+      <div class="advanced-filter-dropdown" #sourceDropdownRef>
+        <button
+          class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2"
+          (click)="toggleSourceDropdown()"
+        >
+          Agents
+          <span *ngIf="selectedSources.length" class="badge rounded-pill" style="background-color: #e20074;">{{ selectedSources.length }}</span>
+          <i [ngClass]="sourceDropdownOpen ? 'bi bi-chevron-up' : 'bi bi-chevron-down'" style="font-size: 0.75em;"></i>
+        </button>
+        <div *ngIf="sourceDropdownOpen" class="dropdown-menu-custom show">
+          <label
+            *ngFor="let option of sourceOptions"
+            class="dropdown-item-custom d-flex align-items-center gap-2"
+          >
+            <input
+              type="checkbox"
+              class="form-check-input m-0"
+              [checked]="isSourceSelected(option.value)"
+              (change)="onSourceChange(option.value)"
+            />
+            <span>{{ option.label }}</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Clear filters button -->
+      <button
+        *ngIf="hasActiveFilters()"
+        class="btn btn-sm btn-link text-danger text-decoration-none"
+        (click)="clearAdvancedFilters()"
+      >
+        <i class="bi bi-x-circle me-1"></i>Clear Filters
+      </button>
+    </div>
+    </div>
+  </div>
+
+  <!-- Alerts Table - AG Grid -->
+  <div class="card border-0 shadow-sm flex-grow-1 d-flex flex-column">
+    <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        Alert Workflows
+      </h5>
+      <div class="d-flex align-items-center gap-2 pagination-top">
+        <span class="text-muted small me-2">Page Size:</span>
+        <select
+          class="form-select form-select-sm"
+          style="width: 70px;"
+          [(ngModel)]="pageSize"
+          (change)="onPageSizeChanged()"
+        >
+          <option [value]="10">10</option>
+          <option [value]="15">15</option>
+          <option [value]="25">25</option>
+          <option [value]="50">50</option>
+        </select>
+        <span class="text-muted small ms-2">{{ paginationInfo }}</span>
+        <button class="btn btn-sm btn-outline-secondary" (click)="goToFirstPage()" [disabled]="currentPage === 0">
+          <i class="bi bi-chevron-bar-left"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-secondary" (click)="goToPrevPage()" [disabled]="currentPage === 0">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <span class="text-muted small">Page {{ currentPage + 1 }} of {{ totalPages }}</span>
+        <button class="btn btn-sm btn-outline-secondary" (click)="goToNextPage()" [disabled]="currentPage >= totalPages - 1">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-secondary" (click)="goToLastPage()" [disabled]="currentPage >= totalPages - 1">
+          <i class="bi bi-chevron-bar-right"></i>
+        </button>
+      </div>
+    </div>
+    <div class="card-body p-0 flex-grow-1 d-flex flex-column">
+      <ag-grid-angular
+        class="ag-grid-container"
+        [theme]="gridTheme"
+        [columnDefs]="columnDefs"
+        [rowData]="filteredAlerts"
+        [defaultColDef]="defaultColDef"
+        [getRowId]="getRowId"
+        [pagination]="true"
+        [paginationPageSize]="pageSize"
+        [paginationPageSizeSelector]="[10, 15, 25, 50]"
+        [suppressPaginationPanel]="true"
+        [animateRows]="false"
+        [suppressCellFocus]="true"
+        [overlayNoRowsTemplate]="noRowsTemplate"
+        (rowClicked)="onRowClicked($event)"
+        (gridReady)="onGridReady($event)"
+        (paginationChanged)="onPaginationChanged($event)"
+      ></ag-grid-angular>
+    </div>
+  </div>
+
+  <!-- Workflow Details Modal -->
+  <app-workflow-details-modal
+    *ngIf="selectedAlert"
+    [alert]="selectedAlert"
+    (close)="closeWorkflowDetails()"
+    (approve)="handleApprove($event)"
+    (reject)="handleReject($event.alertId, $event.reason)"
+  ></app-workflow-details-modal>
+</div>

@@ -1,0 +1,56 @@
+.modal {
+  display: block;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.1); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+.accordion-button:not(.collapsed) {
+  background-color: #e7f1ff;
+  color: #0d6efd;
+}
+
+code {
+  font-size: 0.9rem;
+}
+
+/* Custom success colors using #e8f5e9 instead of Bootstrap bright green */
+.badge-success-custom {
+  background-color: #e8f5e9 !important;
+  color: #2e7d32 !important;
+}
+
+.progress-bar-success-custom {
+  background-color: #e8f5e9 !important;
+  color: #2e7d32 !important;
+}
+
+.text-success-custom {
+  color: #2e7d32 !important;
+}
+
+/* Custom in-progress colors using #e3f2fd instead of Bootstrap bright info */
+.badge-inprogress-custom {
+  background-color: #e3f2fd !important;
+  color: #1565c0 !important;
+}
+
+.progress-bar-inprogress-custom {
+  background-color: #e3f2fd !important;
+  color: #1565c0 !important;
+}
+
+.text-inprogress-custom {
+  color: #1565c0 !important;
+}

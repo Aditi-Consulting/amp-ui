@@ -1,0 +1,36 @@
+.navbar {
+  z-index: 1030;
+  min-height: 90px;
+}
+
+.navbar-brand {
+  font-size: 2rem;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.navbar-brand:focus,
+.navbar-brand:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.nav-text-link {
+  cursor: pointer;
+  text-decoration: none !important;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.nav-text-link:hover {
+  opacity: 1;
+  text-decoration: none !important;
+}
+
+.nav-text-link:focus,
+.nav-text-link:active {
+  outline: none !important;
+  box-shadow: none !important;
+}

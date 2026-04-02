@@ -1,0 +1,489 @@
+<!-- Main Modal -->
+<div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5)">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <!-- Header -->
+      <div class="modal-header" style="background-color: #f5f5f5;">
+        <h5 class="modal-title" style="color: #e20074;">
+          Workflow Details - {{ alert.ticket }}
+        </h5>
+        <button type="button" class="btn-close" (click)="close.emit()"></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+
+        <!-- Alert Overview -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Alert Overview</h6>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="small text-muted">Ticket ID</label>
+                <div class="fw-semibold">{{ alert.ticketId }}</div>
+              </div>
+              <div class="col-md-4">
+                <label class="small text-muted">Status</label>
+                <div>
+                  <span class="badge" [ngStyle]="getStatusBadgeStyle(alert.status)">
+                    {{ formatStatus(alert.status) }}
+                  </span>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label class="small text-muted">Severity</label>
+                <div>
+                  <span class="badge" [ngClass]="getSeverityBadgeClass(alert.severity || '')">
+                    {{ (alert.severity || '').toUpperCase() }}
+                  </span>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label class="small text-muted">Target Agent</label>
+                <div class="fw-semibold">
+                  {{ alert.agentName }}
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label class="small text-muted">Start Time</label>
+                <div class="fw-semibold">{{ formatDateTime(alert.insertedAt || '') }}</div>
+              </div>
+              <div class="col-12">
+                <label class="small text-muted">Description</label>
+                <div class="fw-semibold">{{ alert.ticket }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Classification Reasoning -->
+        <div class="card border-0 shadow-sm mb-4" *ngIf="alert.reasoning">
+          <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Classification Reasoning</h6>
+          </div>
+          <div class="card-body">
+            <div class="alert alert-info mb-0">
+              <i class="bi bi-info-circle-fill me-2"></i>
+              {{ alert.reasoning }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Tool Execution Approval -->
+        <div class="card border-0 shadow-sm border-warning mb-4"
+             *ngIf="alert.status === 'PENDING_APPROVAL'">
+          <div class="card-body">
+            <div class="d-flex gap-2 justify-content-end">
+              <button class="btn btn-danger" (click)="showRejectModal = true">
+                <i class="bi bi-x-circle me-2"></i>Reject Tool Execution
+              </button>
+              <button class="btn btn-success" (click)="handleApprove()">
+                <i class="bi bi-check-circle me-2"></i>Approve Tool Execution
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Task Agent Progress -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">Task Agent Progress</h6>
+            <button *ngIf="taskAgentData"
+                    class="btn btn-sm btn-outline-primary"
+                    (click)="fetchTaskAgentProgress()"
+                    [disabled]="taskAgentLoading">
+              <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+            </button>
+          </div>
+          <div class="card-body">
+
+            <!-- Loading -->
+            <div *ngIf="taskAgentLoading && !taskAgentData" class="text-center py-4">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-2 text-muted">Fetching task agent progress...</p>
+            </div>
+
+            <!-- Error -->
+            <div *ngIf="taskAgentError && !taskAgentData" class="alert alert-warning m-0">
+              <h6 class="alert-heading">
+                <i class="bi bi-exclamation-triangle me-2"></i>Unable to Load Task Agent Data
+              </h6>
+              <p class="mb-2">{{ taskAgentError }}</p>
+              <p class="mb-0 small">
+                <i class="bi bi-info-circle me-1"></i>
+                The alert is being processed. Data will appear automatically when ready.
+              </p>
+              <button class="btn btn-sm btn-outline-primary mt-2"
+                      (click)="fetchTaskAgentProgress()"
+                      [disabled]="taskAgentLoading">
+                <i class="bi bi-arrow-clockwise me-1"></i>Retry Now
+              </button>
+            </div>
+
+            <!-- Success: Task Agent Data -->
+            <div *ngIf="taskAgentData">
+
+              <!-- Execution Summary -->
+              <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                  <label class="small text-muted">Workflow Status</label>
+                  <div>
+                    <span class="badge" [ngStyle]="getStatusBadgeStyle(taskAgentData.taskAgentSummary?.workflowStatus)">
+                      {{ formatStatus(taskAgentData.taskAgentSummary?.workflowStatus) }}
+                    </span>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <label class="small text-muted">Total Steps</label>
+                  <div class="fw-semibold">
+                    {{ taskAgentData.taskAgentSummary?.completedSteps || 0 }} / {{ taskAgentData.taskAgentSummary?.totalSteps || 0 }}
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <label class="small text-muted">Execution Time</label>
+                  <div class="fw-semibold">
+                    <i class="bi bi-clock me-1"></i>
+                    {{ calculateExecutionTime(taskAgentData.taskAgentSummary?.startTime, taskAgentData.taskAgentSummary?.endTime) }}
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <label class="small text-muted">Workflow Type</label>
+                  <div class="fw-semibold text-capitalize">
+                    {{ taskAgentData.taskAgentSummary?.workflowType || 'N/A' }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Progress Bar -->
+              <div class="mb-4">
+                <label class="small text-muted">Progress</label>
+                <div class="progress" style="height: 20px">
+                  <div class="progress-bar"
+                       [ngStyle]="getProgressBarStyle(taskAgentData.taskAgentSummary?.workflowStatus)"
+                       [style.width]="getProgressPercentage() + '%'"
+                       role="progressbar">
+                    {{ getProgressPercentage() }}%
+                  </div>
+                </div>
+              </div>
+
+              <!-- Confidence Score -->
+              <div *ngIf="taskAgentData.confidenceScore !== undefined && taskAgentData.confidenceScore !== null"
+                   class="mb-4">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body py-2">
+                    <div class="d-flex align-items-center justify-content-between">
+                      <div class="d-flex align-items-center">
+                        <i class="bi bi-speedometer2 text-primary me-2 fs-5"></i>
+                        <span class="fw-bold text-dark fs-6">Confidence Score:</span>
+                        <span class="ms-2 fs-5 fw-bold text-primary">{{ taskAgentData.confidenceScore }}%</span>
+                      </div>
+                      <button class="btn btn-sm btn-outline-danger" (click)="toggleEdit()" type="button">
+                        <i class="bi bi-pencil-square me-1"></i> Edit
+                      </button>
+                    </div>
+                    <!-- Edit Section -->
+                    <div *ngIf="showConfidenceEdit" class="mt-3 pt-3 border-top">
+                      <div class="d-flex flex-column align-items-center">
+                        <div class="d-flex align-items-center mb-3">
+                          <button class="btn btn-outline-secondary"
+                                  (click)="decrementScore()"
+                                  [disabled]="(editedConfidenceScore ?? 0) <= 15"
+                                  style="width: 36px; height: 36px; padding: 0">
+                            <i class="bi bi-dash-lg fw-bold"></i>
+                          </button>
+                          <span class="mx-4 fs-2 fw-bold text-primary">{{ editedConfidenceScore }}%</span>
+                          <button class="btn btn-outline-secondary"
+                                  (click)="incrementScore()"
+                                  [disabled]="(editedConfidenceScore ?? 0) >= 100"
+                                  style="width: 36px; height: 36px; padding: 0">
+                            <i class="bi bi-plus-lg fw-bold"></i>
+                          </button>
+                        </div>
+                        <div>
+                          <button class="btn btn-secondary me-2" (click)="cancelEdit()">Cancel</button>
+                          <button class="btn btn-success" (click)="saveConfidenceScore()">Save</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Execution Nodes Accordion -->
+              <div class="accordion" id="taskAgentAccordion">
+                <div *ngFor="let node of taskAgentData.executionNodes; let i = index"
+                     class="accordion-item">
+                  <h2 class="accordion-header">
+                    <button class="accordion-button"
+                            [class.collapsed]="!isAccordionOpen('taskNode' + i)"
+                            type="button"
+                            (click)="toggleAccordion('taskNode' + i)">
+                      <i [ngClass]="getStepIcon(node.status)" [ngStyle]="getStepIconStyle(node.status)" class="me-2" style="width: 4%"></i>
+                      <span class="me-2" style="width: 40%">{{ formatNodeName(node.nodeName) }}</span>
+                      <span class="badge ms-auto me-2" [ngStyle]="getStatusBadgeStyle(node.status)">
+                        {{ formatStatus(node.status) }}
+                      </span>
+                    </button>
+                  </h2>
+                  <div [id]="'taskNode' + i"
+                       class="accordion-collapse"
+                       [class.show]="isAccordionOpen('taskNode' + i)"
+                       [class.collapse]="!isAccordionOpen('taskNode' + i)">
+                    <div class="accordion-body">
+                      <div class="row g-3">
+                        <div class="col-md-6">
+                          <label class="small text-muted">Node Name</label>
+                          <div class="fw-semibold">{{ node.nodeName }}</div>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="small text-muted">Execution Order</label>
+                          <div class="fw-semibold">{{ node.executionOrder }}</div>
+                        </div>
+                        <div class="col-12">
+                          <label class="small text-muted">Result Summary</label>
+                          <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle me-2"></i>{{ node.resultSummary }}
+                          </div>
+                        </div>
+
+                        <!-- Full Result (not fetch/generate_resolution or suggestions_for_fix) -->
+                        <div class="col-12"
+                             *ngIf="node.fullResult && node.nodeName !== 'fetch_resolution' && node.nodeName !== 'generate_resolution' && node.nodeName !== 'suggestions_for_fix'">
+                          <label class="small text-muted">Full Result</label>
+                          <div class="alert alert-secondary mb-0">
+                            <code>{{ node.fullResult }}</code>
+                          </div>
+                        </div>
+
+                        <!-- Suggestions for Fix Steps (read-only) -->
+                        <ng-container *ngIf="parseSuggestionsFixSteps(node) as fixSteps">
+                          <div class="col-12">
+                            <label class="small text-muted">Suggested Fix Steps</label>
+                            <div class="d-flex flex-column gap-2 mt-1">
+                              <div *ngFor="let step of fixSteps; let si = index; trackBy: trackByIndex"
+                                   class="card border">
+                                <div class="card-body p-3">
+                                  <div class="d-flex align-items-start">
+                                    <span class="badge rounded-pill me-2 mt-1" style="background-color: rgba(116, 153, 118, 0.15); color: rgb(116, 153, 118); min-width: 24px;">{{ si + 1 }}</span>
+                                    <p class="mb-0">{{ step }}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </ng-container>
+
+                        <!-- Fetch / Generate Resolution Data -->
+                        <ng-container *ngIf="(node.nodeName === 'fetch_resolution' || node.nodeName === 'generate_resolution') && parseFetchResolutionData(node) as resData">
+
+                          <!-- Summary Lines -->
+                          <div class="col-12" *ngIf="resData.summary.length > 0">
+                            <label class="small text-muted">Full Summary</label>
+                            <div class="alert alert-info mb-0">
+                              <ul class="mb-0" style="padding-left: 1.2rem">
+                                <li *ngFor="let line of resData.summary; trackBy: trackByIndex">{{ line }}</li>
+                              </ul>
+                            </div>
+                          </div>
+
+                          <!-- Resolution Steps -->
+                          <div class="col-12" *ngIf="resData.showSteps">
+                            <div class="accordion" [id]="'resolutionStepsAccordion' + i">
+                              <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                  <button class="accordion-button" type="button"
+                                          (click)="toggleAccordion('resolutionSteps' + i)">
+                                    Resolution Flow
+                                  </button>
+                                </h2>
+                                <div [id]="'resolutionSteps' + i"
+                                     class="accordion-collapse show">
+                                  <div class="accordion-body">
+                                    <div class="d-flex flex-column gap-2">
+
+                                      <!-- READ-ONLY (Splunk / ServiceNow) -->
+                                      <ng-container *ngIf="isReadOnlyResolution">
+                                        <div *ngFor="let stepGroup of parsedStepsWithSubSteps; let gi = index; trackBy: trackByIndex"
+                                             class="card border">
+                                          <div class="card-body p-3">
+                                            <p class="mb-0 fw-semibold">{{ stepGroup.mainStep }}</p>
+                                            <div *ngIf="stepGroup.subSteps.length > 0" class="ms-4 mt-2">
+                                              <p *ngFor="let subStep of stepGroup.subSteps; trackBy: trackByIndex"
+                                                 class="mb-1 text-secondary" style="font-size: 0.95rem">
+                                                {{ subStep }}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </ng-container>
+
+                                      <!-- EDITABLE (non-Splunk) -->
+                                      <ng-container *ngIf="!isReadOnlyResolution">
+                                        <!-- Existing Steps -->
+                                        <div *ngFor="let step of localSteps; let si = index; trackBy: trackByIndex"
+                                             class="card border">
+                                          <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                              <div class="flex-grow-1 me-3">
+                                                <textarea *ngIf="editingStepIndex === si"
+                                                          [(ngModel)]="editedStepText"
+                                                          class="form-control"
+                                                          rows="2"
+                                                          (keydown.escape)="cancelEditStep()"></textarea>
+                                                <p *ngIf="editingStepIndex !== si" class="mb-0">{{ step }}</p>
+                                              </div>
+                                              <div class="d-flex gap-2">
+                                                <!-- Saving -->
+                                                <ng-container *ngIf="editingStepIndex === si">
+                                                  <button class="btn btn-sm btn-success" type="button" (click)="saveEditStep(si)">
+                                                    <i class="bi bi-check-lg"></i>
+                                                  </button>
+                                                  <button class="btn btn-sm btn-secondary" type="button" (click)="cancelEditStep()">
+                                                    <i class="bi bi-x-lg"></i>
+                                                  </button>
+                                                </ng-container>
+                                                <!-- Edit/Delete -->
+                                                <ng-container *ngIf="editingStepIndex !== si">
+                                                  <button class="btn btn-sm btn-outline-primary" type="button" (click)="startEditStep(si, step)">
+                                                    <i class="bi bi-pencil"></i>
+                                                  </button>
+                                                  <button class="btn btn-sm btn-outline-danger" type="button" (click)="deleteStep(si)">
+                                                    <i class="bi bi-trash"></i>
+                                                  </button>
+                                                </ng-container>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        <!-- New Steps -->
+                                        <div *ngFor="let newStep of newSteps; let ni = index; trackBy: trackByIndex"
+                                             class="card border border-success">
+                                          <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                              <div class="flex-grow-1 me-3">
+                                                <textarea [(ngModel)]="newSteps[ni]"
+                                                          class="form-control"
+                                                          rows="2"
+                                                          placeholder="Enter step description..."></textarea>
+                                              </div>
+                                              <div class="d-flex gap-2">
+                                                <button class="btn btn-sm btn-outline-danger" type="button"
+                                                        (click)="removeNewStep(ni)">
+                                                  <i class="bi bi-trash"></i>
+                                                </button>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        <!-- Add Step / Save All -->
+                                        <div class="d-flex justify-content-between mt-2">
+                                          <button class="btn btn-sm btn-success" type="button" (click)="addNewStepField()">
+                                            <i class="bi bi-plus-circle me-1"></i>Add Step
+                                          </button>
+                                          <button *ngIf="hasStepChanges || newSteps.length > 0"
+                                                  class="btn btn-sm btn-success" type="button"
+                                                  (click)="saveAllNewSteps()">
+                                            <i class="bi bi-save me-1"></i>Save All Changes
+                                          </button>
+                                        </div>
+                                      </ng-container>
+
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </ng-container>
+
+                        <!-- Root Cause -->
+                        <div class="col-12" *ngIf="node.rootCause">
+                          <label class="small text-muted">Root Cause</label>
+                          <div class="alert alert-secondary mb-0">
+                            <code>{{ node.rootCause }}</code>
+                          </div>
+                        </div>
+                        <div class="col-12" *ngIf="node.rootCause">
+                          <label class="small text-muted">Resolution Performed</label>
+                          <div class="alert alert-secondary mb-0">
+                            <code>Sent an email with Team to fix this issue.</code>
+                          </div>
+                        </div>
+
+                        <!-- Error Message -->
+                        <div class="col-12" *ngIf="node.errorMessage">
+                          <label class="small text-muted">Error Message</label>
+                          <div class="alert alert-danger mb-0">
+                            <i class="bi bi-exclamation-triangle me-2"></i>{{ node.errorMessage }}
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- No Data yet -->
+            <div *ngIf="!taskAgentLoading && !taskAgentError && !taskAgentData"
+                 class="text-center py-4 text-muted">
+              <div class="d-flex align-items-center justify-content-center">
+                <div class="spinner-border spinner-border-sm me-2 text-info" role="status">
+                  <span class="visually-hidden">Processing...</span>
+                </div>
+                <span>Waiting for task agent data...</span>
+              </div>
+              <p class="mt-2 small">No task agent data available yet. Auto-refreshing every 5 seconds.</p>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+      <!-- End Modal Body -->
+
+      <!-- Footer -->
+      <div class="modal-footer d-flex justify-content-end align-items-center">
+        <button type="button" class="btn btn-secondary" (click)="close.emit()">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Reject Reason Modal -->
+<div *ngIf="showRejectModal"
+     class="modal fade show d-block" tabindex="-1"
+     style="background-color: rgba(0,0,0,0.5); z-index: 1060">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Reject Tool Execution</h5>
+        <button type="button" class="btn-close" (click)="showRejectModal = false"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">Reason for Rejection</label>
+        <textarea [(ngModel)]="rejectReason"
+                  class="form-control" rows="4"
+                  placeholder="Please provide a reason for rejecting this tool execution..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="showRejectModal = false">Cancel</button>
+        <button type="button" class="btn btn-danger"
+                (click)="handleReject()"
+                [disabled]="!rejectReason.trim()">
+          Confirm Rejection
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

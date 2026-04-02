@@ -1,0 +1,106 @@
+<!-- Default Cards (shown in both dashboard and analytics) -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card stat-card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <p class="text-muted mb-1 small">Total Alerts</p>
+            <h3 class="mb-0">{{ statusCounts.all }}</h3>
+          </div>
+          <div class="stat-icon" style="background-color: rgba(21, 101, 192, 0.1); color: #6085b1;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card stat-card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <p class="text-muted mb-1 small">In Progress</p>
+            <h3 class="mb-0">{{ statusCounts.in_progress }}</h3>
+          </div>
+          <div class="stat-icon" style="background-color: rgba(21, 101, 192, 0.1); color: #346ba9;">
+            <i class="bi bi-arrow-repeat"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card stat-card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <p class="text-muted mb-1 small">Resolved</p>
+            <h3 class="mb-0">{{ statusCounts.resolved }}</h3>
+          </div>
+          <div class="stat-icon" style="background-color: rgba(46, 125, 50, 0.1); color: #7aa97d;">
+            <i class="bi bi-check-circle-fill"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Analytics-only Cards: Sources, Agents, Resolution Rate -->
+<div *ngIf="mode === 'analytics'" class="row g-3 mb-4">
+
+  <!-- Sources -->
+  <div class="col-md-4">
+    <div class="card stat-card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <p class="text-muted mb-1 small">Sources</p>
+            <h3 class="mb-0">{{ uniqueSourcesCount }}</h3>
+          </div>
+          <div class="stat-icon" style="background-color: rgba(0, 150, 136, 0.1); color: #6085b1;">
+            <i class="bi bi-diagram-3-fill"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agents -->
+  <div class="col-md-4">
+    <div class="card stat-card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <p class="text-muted mb-1 small">Agents</p>
+            <h3 class="mb-0">{{ uniqueAgentsCount }}</h3>
+          </div>
+          <div class="stat-icon" style="background-color: rgba(156, 39, 176, 0.1); color: #346ba9;">
+            <i class="bi bi-robot"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resolution Rate -->
+  <div class="col-md-4">
+    <div class="card stat-card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <p class="text-muted mb-1 small">Resolution Rate</p>
+            <h3 class="mb-0">{{ resolutionRate }}%</h3>
+          </div>
+          <div class="stat-icon" style="background-color: rgba(46, 125, 50, 0.1); color: #009688;">
+            <i class="bi bi-graph-up-arrow"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
