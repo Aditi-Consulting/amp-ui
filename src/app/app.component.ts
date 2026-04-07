@@ -14,5 +14,5 @@ import { RouterOutlet } from '@angular/router';
   `]
 })
 export class AppComponent {
-  title = 'AMP UI 2 - Angular';
+  title = 'AMP UI - Angular';
 }
