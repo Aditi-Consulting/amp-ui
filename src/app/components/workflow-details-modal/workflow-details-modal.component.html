@@ -452,7 +452,30 @@
       <!-- End Modal Body -->
 
       <!-- Footer -->
-      <div class="modal-footer d-flex justify-content-end align-items-center">
+      <div class="modal-footer d-flex justify-content-between align-items-center">
+
+        <!-- Retry button — shown only when agent data has been loaded at least once -->
+        <div class="d-flex align-items-center gap-2">
+          <button
+            *ngIf="taskAgentData !== null"
+            type="button"
+            class="btn btn-warning"
+            (click)="handleRetry()"
+            [disabled]="isRetrying"
+            title="Re-trigger the agent for this alert">
+            <span *ngIf="isRetrying"
+                  class="spinner-border spinner-border-sm me-1"
+                  role="status"
+                  aria-hidden="true">
+            </span>
+            <i *ngIf="!isRetrying" class="bi bi-arrow-clockwise me-1"></i>
+            {{ isRetrying ? 'Retrying...' : 'Retry' }}
+          </button>
+          <span *ngIf="retryError" class="text-danger small">
+            <i class="bi bi-exclamation-circle me-1"></i>{{ retryError }}
+          </span>
+        </div>
+
         <button type="button" class="btn btn-secondary" (click)="close.emit()">Close</button>
       </div>
 

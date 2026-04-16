@@ -90,6 +90,20 @@ export class AlertsApiService {
     );
   }
 
+  /** Call 1 — Reset alert status for retry */
+  retryAlert(alertId: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/alerts/${alertId}/retry`, {}).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /** Call 2 — Trigger the specific agent by source (backend resolves source from alertId) */
+  triggerAgentBySource(alertId: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/client/trigger-agent-by-source?alertId=${alertId}`, {}).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   /** Centralized error handler matching Vue.js interceptor logic */
   private handleError(error: HttpErrorResponse): Observable<never> {
     if (error.error instanceof ErrorEvent) {

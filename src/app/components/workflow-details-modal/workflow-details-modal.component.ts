@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angu
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription, interval } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { Alert } from '../../models/alert.model';
 import { AlertsApiService } from '../../services/alerts-api.service';
 
@@ -39,6 +40,10 @@ export class WorkflowDetailsModalComponent implements OnInit, OnDestroy {
   hasStepChanges = false;
   currentResolutionId: string | null = null;
   resolutionData: any = null;
+
+  // Retry state
+  isRetrying = false;
+  retryError: string | null = null;
 
   // Polling
   private pollSubscription: Subscription | null = null;
@@ -125,6 +130,61 @@ export class WorkflowDetailsModalComponent implements OnInit, OnDestroy {
         this.taskAgentLoading = false;
       }
     });
+  }
+
+  // ─── Retry ───────────────────────────────────────────────────────────────────
+
+  handleRetry(): void {
+    if (!this.alert?.id || this.isRetrying) return;
+
+    this.isRetrying = true;
+    this.retryError = null;
+
+    // Call 1: reset alert status → on success → Call 2: trigger agent by source
+    this.alertsApi.retryAlert(this.alert.id)
+      .pipe(
+        switchMap(() => {
+          console.log('✅ Call 1 success — alert reset, triggering agent...');
+          return this.alertsApi.triggerAgentBySource(this.alert.id);
+        })
+      )
+      .subscribe({
+        next: () => {
+          console.log('✅ Call 2 success — agent triggered for alert', this.alert.id);
+          this.isRetrying = false;
+
+          // Clear previous agent result so UI shows fresh loading state
+          this.taskAgentData = null;
+          this.taskAgentError = null;
+          this.resolutionData = null;
+          this.localSteps = [];
+          this.firstNodeInitialized = false;
+          this.openAccordions.clear();
+
+          // Reset and restart polling to pick up the new agent result
+          this.stopPolling();
+          this.pollAttempts = 0;
+          this.fetchTaskAgentProgress();
+          this.pollSubscription = interval(5000).subscribe(() => {
+            this.pollAttempts++;
+            if (this.pollAttempts >= this.MAX_POLL_ATTEMPTS) {
+              this.stopPolling();
+              this.taskAgentError = 'Auto-refresh timeout. Please close and reopen the alert.';
+              return;
+            }
+            this.fetchTaskAgentProgress();
+            const status = this.taskAgentData?.taskAgentSummary?.workflowStatus?.toLowerCase();
+            if (status === 'completed' || status === 'resolved' || status === 'failed') {
+              this.stopPolling();
+            }
+          });
+        },
+        error: (err) => {
+          console.error('❌ Retry failed:', err);
+          this.isRetrying = false;
+          this.retryError = err.message || 'Retry failed. Please try again.';
+        }
+      });
   }
 
   // ─── API: Resolution Data ───────────────────────────────────────────────────
